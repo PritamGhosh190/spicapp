@@ -477,6 +477,26 @@ const LoginScreen = () => {
                 )}
               </TouchableOpacity>
             </Animated.View>
+
+
+            <View style={styles.signupRow}>
+              <Text style={styles.signupText}>Not an agent yet?</Text> 
+              <TouchableOpacity
+                onPress={() =>
+                  // showToast({
+                  //   type: 'info',
+                  //   title: 'Sign Up',
+                  //   message: 'Please contact your administrator to create an account.', 
+                  // })
+                  navigation.navigate('OnboardingScreen')
+                }
+                activeOpacity={0.7}
+                accessibilityLabel="Sign up link"
+                accessibilityRole="button"
+              >
+                <Text style={styles.signupLink}>Apply Now</Text>
+              </TouchableOpacity>
+            </View>
             
           </Animated.View>
 

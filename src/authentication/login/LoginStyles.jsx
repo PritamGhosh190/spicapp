@@ -449,6 +449,23 @@ const styles = StyleSheet.create({
     letterSpacing: scale(1),
     textTransform: 'uppercase',
   },
+  signupRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: verticalScale(12),
+  },
+  signupText: {
+    fontFamily: FONTS.sans,
+    fontSize: moderateScale(12),
+    color: COLORS.textSecondary,
+  },
+  signupLink: {
+    fontFamily: FONTS.sans,
+    fontSize: moderateScale(12),
+    color: COLORS.brand,
+    marginLeft: scale(4),
+  },
 });
 
 export default styles;

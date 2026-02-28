@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Logins from '../authentication/login/Logins';
 import BottmNav from './BottomNav';
+import OnboardingScreen from '../agentOnboard/OnboardingScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -14,6 +15,7 @@ const Stackmain = () => {
 
         <Stack.Screen name="Login" component={Logins} options={{ headerShown: false }} />
         <Stack.Screen name="BottomNav" component={BottmNav} options={{ headerShown: false }} />
+        <Stack.Screen name="OnboardingScreen" component={OnboardingScreen} options={{ headerShown: false }} />
 
 
       </Stack.Navigator>
