@@ -15,7 +15,7 @@
  *   NSPhotoLibraryUsageDescription
  */
 
-import React, {useState, useRef, useEffect, useCallback} from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -34,13 +34,14 @@ import {
   Dimensions,
 } from 'react-native';
 import ImageCropPicker from 'react-native-image-crop-picker';
-import {styles, COLORS, wp, hp} from './OnboardingStyles';
+import { styles, COLORS, wp, hp } from './OnboardingStyles';
+import { agentApply } from '../api/Globalapi';
 
-const {height: SCREEN_HEIGHT} = Dimensions.get('window');
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const MODAL_HEIGHT = SCREEN_HEIGHT * 0.38; // approximate sheet height
 
 // ─── Animated error label ─────────────────────────────────────────────────────
-const ErrorText = ({message}) => {
+const ErrorText = ({ message }) => {
   const anim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -66,7 +67,8 @@ const ErrorText = ({message}) => {
             },
           ],
         },
-      ]}>
+      ]}
+    >
       ⚠ {message}
     </Animated.Text>
   );
@@ -75,9 +77,9 @@ const ErrorText = ({message}) => {
 // ─── Camera / Gallery Bottom Sheet ───────────────────────────────────────────
 // The Modal stays mounted at all times. We use translateY to show/hide the
 // sheet and opacity for the backdrop — this avoids the RN Modal unmount bug.
-const PickerModal = ({isVisible, onClose, onCamera, onGallery}) => {
+const PickerModal = ({ isVisible, onClose, onCamera, onGallery }) => {
   const backdropOpacity = useRef(new Animated.Value(0)).current;
-  const sheetY          = useRef(new Animated.Value(MODAL_HEIGHT)).current;
+  const sheetY = useRef(new Animated.Value(MODAL_HEIGHT)).current;
   // Track whether modal should be "rendered" at all (keeps it in the tree)
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -123,42 +125,36 @@ const PickerModal = ({isVisible, onClose, onCamera, onGallery}) => {
 
   return (
     <Modal
-      visible={true}            // always true while mounted
+      visible={true} // always true while mounted
       transparent={true}
-      animationType="none"      // we handle animation ourselves
+      animationType="none" // we handle animation ourselves
       statusBarTranslucent={true}
-      onRequestClose={onClose}>
-
+      onRequestClose={onClose}
+    >
       {/* Backdrop */}
       <TouchableWithoutFeedback onPress={onClose}>
         <Animated.View
-          style={[
-            styles.modalBackdrop,
-            {opacity: backdropOpacity},
-          ]}
+          style={[styles.modalBackdrop, { opacity: backdropOpacity }]}
         />
       </TouchableWithoutFeedback>
 
       {/* Bottom Sheet */}
       <Animated.View
-        style={[
-          styles.modalContainer,
-          {transform: [{translateY: sheetY}]},
-        ]}>
+        style={[styles.modalContainer, { transform: [{ translateY: sheetY }] }]}
+      >
         {/* Drag handle */}
         <View style={styles.modalHandle} />
 
         <Text style={styles.modalTitle}>Choose Source</Text>
-        <Text style={styles.modalSubtitle}>
-          How would you like to upload?
-        </Text>
+        <Text style={styles.modalSubtitle}>How would you like to upload?</Text>
 
         <View style={styles.modalOptions}>
           {/* Camera */}
           <TouchableOpacity
             style={styles.modalOptionCamera}
             onPress={onCamera}
-            activeOpacity={0.82}>
+            activeOpacity={0.82}
+          >
             <View style={styles.modalOptionIconBg}>
               <Text style={styles.modalOptionEmoji}>📷</Text>
             </View>
@@ -170,7 +166,8 @@ const PickerModal = ({isVisible, onClose, onCamera, onGallery}) => {
           <TouchableOpacity
             style={styles.modalOptionGallery}
             onPress={onGallery}
-            activeOpacity={0.82}>
+            activeOpacity={0.82}
+          >
             <View style={styles.modalOptionIconBg}>
               <Text style={styles.modalOptionEmoji}>🖼️</Text>
             </View>
@@ -188,14 +185,29 @@ const PickerModal = ({isVisible, onClose, onCamera, onGallery}) => {
 };
 
 // ─── Upload Card ──────────────────────────────────────────────────────────────
-const UploadCard = ({label, icon, image, onPress, onRemove, error, style}) => {
-  const scaleAnim  = useRef(new Animated.Value(1)).current;
+const UploadCard = ({
+  label,
+  icon,
+  image,
+  onPress,
+  onRemove,
+  error,
+  style,
+}) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
   const borderAnim = useRef(new Animated.Value(0)).current;
 
-  const handlePressIn  = () =>
-    Animated.spring(scaleAnim, {toValue: 0.96, useNativeDriver: true}).start();
+  const handlePressIn = () =>
+    Animated.spring(scaleAnim, {
+      toValue: 0.96,
+      useNativeDriver: true,
+    }).start();
   const handlePressOut = () =>
-    Animated.spring(scaleAnim, {toValue: 1, friction: 4, useNativeDriver: true}).start();
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 4,
+      useNativeDriver: true,
+    }).start();
 
   useEffect(() => {
     Animated.timing(borderAnim, {
@@ -213,22 +225,28 @@ const UploadCard = ({label, icon, image, onPress, onRemove, error, style}) => {
   return (
     <View style={[styles.uploadCardWrapper, style]}>
       <Animated.View
-        style={[styles.uploadCardAnimContainer, {transform: [{scale: scaleAnim}]}]}>
+        style={[
+          styles.uploadCardAnimContainer,
+          { transform: [{ scale: scaleAnim }] },
+        ]}
+      >
         <TouchableOpacity
           activeOpacity={0.85}
           onPress={onPress}
           onPressIn={handlePressIn}
-          onPressOut={handlePressOut}>
+          onPressOut={handlePressOut}
+        >
           <Animated.View
             style={[
               styles.uploadCard,
-              {borderColor},
+              { borderColor },
               error ? styles.uploadCardError : null,
-            ]}>
+            ]}
+          >
             {image ? (
               <View style={styles.uploadedImageContainer}>
                 <Image
-                  source={{uri: image.uri}}
+                  source={{ uri: image.uri }}
                   style={styles.uploadedImage}
                   resizeMode="cover"
                 />
@@ -240,7 +258,8 @@ const UploadCard = ({label, icon, image, onPress, onRemove, error, style}) => {
                 <TouchableOpacity
                   style={styles.removeButton}
                   onPress={onRemove}
-                  hitSlop={{top: 10, right: 10, bottom: 10, left: 10}}>
+                  hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                >
                   <View style={styles.removeButtonInner}>
                     <Text style={styles.removeButtonText}>✕</Text>
                   </View>
@@ -274,7 +293,7 @@ const FloatingInput = ({
   ...rest
 }) => {
   const [focused, setFocused] = useState(false);
-  const labelAnim  = useRef(new Animated.Value(value ? 1 : 0)).current;
+  const labelAnim = useRef(new Animated.Value(value ? 1 : 0)).current;
   const borderAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -290,27 +309,36 @@ const FloatingInput = ({
     }).start();
   }, [focused, value]);
 
-  const labelTop   = labelAnim.interpolate({inputRange:[0,1], outputRange:[hp(1.8), hp(-1.2)]});
-  const labelSize  = labelAnim.interpolate({inputRange:[0,1], outputRange:[wp(3.8), wp(3.2)]});
+  const labelTop = labelAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [hp(1.8), hp(-1.2)],
+  });
+  const labelSize = labelAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [wp(3.8), wp(3.2)],
+  });
   const labelColor = labelAnim.interpolate({
-    inputRange:  [0,1],
+    inputRange: [0, 1],
     outputRange: [COLORS.placeholder, COLORS.primary],
   });
   const borderColor = borderAnim.interpolate({
-    inputRange:  [0,1],
+    inputRange: [0, 1],
     outputRange: [error ? COLORS.error : COLORS.border, COLORS.primary],
   });
 
   return (
     <View style={styles.inputWrapper}>
-      <Animated.View style={[styles.inputContainer, {borderBottomColor: borderColor}]}>
+      <Animated.View
+        style={[styles.inputContainer, { borderBottomColor: borderColor }]}
+      >
         <Text style={styles.inputIcon}>{icon}</Text>
         <View style={styles.inputInner}>
           <Animated.Text
             style={[
               styles.floatingLabel,
-              {top: labelTop, fontSize: labelSize, color: labelColor},
-            ]}>
+              { top: labelTop, fontSize: labelSize, color: labelColor },
+            ]}
+          >
             {label}
           </Animated.Text>
           <TextInput
@@ -343,19 +371,29 @@ const OnboardingScreen = () => {
     aadhaar: null,
     pan: null,
   });
-  const [errors, setErrors]       = useState({});
+  const [errors, setErrors] = useState({});
   const [pickerTarget, setPickerTarget] = useState(null);
   const [pickerVisible, setPickerVisible] = useState(false);
-  const [loading, setLoading]     = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const headerAnim = useRef(new Animated.Value(0)).current;
-  const formAnim   = useRef(new Animated.Value(0)).current;
+  const formAnim = useRef(new Animated.Value(0)).current;
   const buttonAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.stagger(200, [
-      Animated.spring(headerAnim, {toValue:1, friction:6, tension:80, useNativeDriver:true}),
-      Animated.spring(formAnim,   {toValue:1, friction:6, tension:80, useNativeDriver:true}),
+      Animated.spring(headerAnim, {
+        toValue: 1,
+        friction: 6,
+        tension: 80,
+        useNativeDriver: true,
+      }),
+      Animated.spring(formAnim, {
+        toValue: 1,
+        friction: 6,
+        tension: 80,
+        useNativeDriver: true,
+      }),
     ]).start();
   }, []);
 
@@ -378,24 +416,31 @@ const OnboardingScreen = () => {
     await new Promise(resolve => setTimeout(resolve, 350));
     try {
       const image = await ImageCropPicker.openCamera({
-        mediaType:    'photo',
-        cropping:     true,           // ✅ built-in crop UI
-        cropperCircleOverlay: target === 'profile', // circle crop for profile
-        quality:      0.8,
+        mediaType: 'photo',
+        cropping: true,
+        cropperCircleOverlay: target === 'profile', // circle for profile, rect for docs
+        freeStyleCropEnabled: true, // ✅ user can resize crop box freely
+        quality: 0.8,
         compressImageQuality: 0.8,
         includeBase64: false,
+        // Do NOT set width/height — that locks aspect ratio and disables free crop
+        cropperToolbarTitle: 'Adjust Crop',
+        cropperActiveWidgetColor: '#E8620A',
+        cropperStatusBarColor: '#E8620A',
+        cropperToolbarColor: '#E8620A',
+        cropperToolbarWidgetColor: '#FFFFFF',
       });
       // image-crop-picker returns { path, mime, filename, size, width, height }
       const asset = {
-        uri:      image.path,
-        type:     image.mime,
+        uri: image.path,
+        type: image.mime,
         fileName: image.filename || `${target}_${Date.now()}.jpg`,
-        width:    image.width,
-        height:   image.height,
+        width: image.width,
+        height: image.height,
         fileSize: image.size,
       };
-      setImages(p => ({...p, [target]: asset}));
-      setErrors(p => ({...p, [target]: null}));
+      setImages(p => ({ ...p, [target]: asset }));
+      setErrors(p => ({ ...p, [target]: null }));
     } catch (err) {
       // user cancelled — crop-picker throws with code E_PICKER_CANCELLED
       if (err?.code !== 'E_PICKER_CANCELLED') {
@@ -412,32 +457,42 @@ const OnboardingScreen = () => {
     await new Promise(resolve => setTimeout(resolve, 350));
     try {
       const image = await ImageCropPicker.openPicker({
-        mediaType:            'photo',
-        cropping:             true,
-        cropperCircleOverlay: target === 'profile',
-        quality:              0.8,
+        mediaType: 'photo',
+        cropping: true,
+        cropperCircleOverlay: target === 'profile', // circle for profile, rect for docs
+        freeStyleCropEnabled: true, // ✅ user can resize crop box freely
+        quality: 0.8,
         compressImageQuality: 0.8,
-        includeBase64:        false,
+        includeBase64: false,
+        // Do NOT set width/height — that locks aspect ratio and disables free crop
+        cropperToolbarTitle: 'Adjust Crop',
+        cropperActiveWidgetColor: '#E8620A',
+        cropperStatusBarColor: '#E8620A',
+        cropperToolbarColor: '#E8620A',
+        cropperToolbarWidgetColor: '#FFFFFF',
       });
       const asset = {
-        uri:      image.path,
-        type:     image.mime,
+        uri: image.path,
+        type: image.mime,
         fileName: image.filename || `${target}_${Date.now()}.jpg`,
-        width:    image.width,
-        height:   image.height,
+        width: image.width,
+        height: image.height,
         fileSize: image.size,
       };
-      setImages(p => ({...p, [target]: asset}));
-      setErrors(p => ({...p, [target]: null}));
+      setImages(p => ({ ...p, [target]: asset }));
+      setErrors(p => ({ ...p, [target]: null }));
     } catch (err) {
       if (err?.code !== 'E_PICKER_CANCELLED') {
-        Alert.alert('Gallery Error', 'Could not open gallery. Please try again.');
+        Alert.alert(
+          'Gallery Error',
+          'Could not open gallery. Please try again.',
+        );
         console.log('Gallery error:', err);
       }
     }
   }, [pickerTarget]);
 
-  const removeImage = key => setImages(p => ({...p, [key]: null}));
+  const removeImage = key => setImages(p => ({ ...p, [key]: null }));
 
   // ── Validation ──────────────────────────────────────────────────────────────
   const validate = () => {
@@ -454,9 +509,9 @@ const OnboardingScreen = () => {
       e.phone = 'Enter a valid 10-digit phone number';
     }
     if (!form.address.trim()) e.address = 'Address is required';
-    if (!images.profile)      e.profile  = 'Profile photo is required';
-    if (!images.aadhaar)      e.aadhaar  = 'Aadhaar document is required';
-    if (!images.pan)          e.pan      = 'PAN document is required';
+    if (!images.profile) e.profile = 'Profile photo is required';
+    if (!images.aadhaar) e.aadhaar = 'Aadhaar document is required';
+    if (!images.pan) e.pan = 'PAN document is required';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -464,21 +519,30 @@ const OnboardingScreen = () => {
   // ── Submit ──────────────────────────────────────────────────────────────────
   const submitFormData = async formData => {
     console.log('====== FORM DATA SUBMITTED ======');
-    console.log('Full Name :', form.fullName);
-    console.log('Email     :', form.email);
-    console.log('Phone     :', form.phone);
-    console.log('Address   :', form.address);
-    console.log('Profile   :', images.profile?.fileName, '|', images.profile?.uri);
-    console.log('Aadhaar   :', images.aadhaar?.fileName, '|', images.aadhaar?.uri);
-    console.log('PAN       :', images.pan?.fileName,     '|', images.pan?.uri);
+    console.log(
+      'Full Name😎😎😎😎😎 :',
+      form.fullName,
+      form.email,
+      form.phone,
+      form.address,
+      images.profile,
+      images.aadhaar,
+      images.pan,
+    );
+    // console.log('Email     :', form.email);
+    // console.log('Phone     :', form.phone);
+    // console.log('Address   :', form.address);
+    // console.log('Profile   :', images.profile?.fileName, '|', images.profile?.uri);
+    // console.log('Aadhaar   :', images.aadhaar?.fileName, '|', images.aadhaar?.uri);
+    // console.log('PAN       :', images.pan?.fileName,     '|', images.pan?.uri);
     console.log('=================================');
 
-    const response = await fetch('https://your-api-endpoint.com/api/onboard', {
-      method: 'POST',
-      headers: {Accept: 'application/json', 'Content-Type': 'multipart/form-data'},
-      body: formData,
-    });
-    return response.json();
+    // const response = await fetch('https://your-api-endpoint.com/api/onboard', {
+    //   method: 'POST',
+    //   headers: {Accept: 'application/json', 'Content-Type': 'multipart/form-data'},
+    //   body: formData,
+    // });
+    // return response.json();
   };
 
   const handleApply = async () => {
@@ -488,37 +552,50 @@ const OnboardingScreen = () => {
     }
 
     Animated.sequence([
-      Animated.timing(buttonAnim, {toValue:0.95, duration:100, useNativeDriver:true}),
-      Animated.timing(buttonAnim, {toValue:1,    duration:100, useNativeDriver:true}),
+      Animated.timing(buttonAnim, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(buttonAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
     ]).start();
 
     setLoading(true);
     const formData = new FormData();
-    formData.append('fullName', form.fullName);
-    formData.append('email',    form.email);
-    formData.append('phone',    form.phone);
-    formData.append('address',  form.address);
+    formData.append('name', form.fullName);
+    formData.append('email', form.email);
+    formData.append('phone', form.phone);
+    formData.append('address', form.address);
 
     const appendImage = (key, asset, filename) => {
       if (asset) {
         formData.append(key, {
-          uri:  asset.uri,
+          uri: asset.uri,
           type: asset.type || 'image/jpeg',
           name: asset.fileName || filename,
         });
       }
     };
-    appendImage('profilePhoto', images.profile, 'profile.jpg');
-    appendImage('aadhaar',      images.aadhaar, 'aadhaar.jpg');
-    appendImage('pan',          images.pan,      'pan.jpg');
+    appendImage('photo', images.profile);
+    appendImage('aadhaar', images.aadhaar);
+    appendImage('pan', images.pan);
 
     try {
-      const result = await submitFormData(formData);
+      const result = await agentApply(formData);
       console.log('API Response:', result);
-      Alert.alert('🎉 Success!', 'Your application has been submitted!', [{text: 'Done'}]);
+      Alert.alert('🎉 Success!', 'Your application has been submitted!', [
+        { text: 'Done' },
+      ]);
     } catch (err) {
       console.log('API Error:', err);
-      Alert.alert('Submission Failed', 'Something went wrong. Please try again.');
+      Alert.alert(
+        'Submission Failed',
+        'Something went wrong. Please try again.',
+      );
     } finally {
       setLoading(false);
     }
@@ -533,26 +610,30 @@ const OnboardingScreen = () => {
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{flex: 1}}>
+        style={{ flex: 1 }}
+      >
         <ScrollView
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled">
-
+          keyboardShouldPersistTaps="handled"
+        >
           {/* Header */}
           <Animated.View
             style={[
               styles.header,
               {
                 opacity: headerAnim,
-                transform: [{
-                  translateY: headerAnim.interpolate({
-                    inputRange: [0,1],
-                    outputRange: [-30, 0],
-                  }),
-                }],
+                transform: [
+                  {
+                    translateY: headerAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [-30, 0],
+                    }),
+                  },
+                ],
               },
-            ]}>
+            ]}
+          >
             <View style={styles.brandRow}>
               <View style={styles.brandIcon}>
                 <Text style={styles.brandEmoji}>🌶️</Text>
@@ -569,7 +650,9 @@ const OnboardingScreen = () => {
             <View style={styles.progressBar}>
               <View style={styles.progressFill} />
             </View>
-            <Text style={styles.progressLabel}>Step 1 of 1 — Personal Details</Text>
+            <Text style={styles.progressLabel}>
+              Step 1 of 1 — Personal Details
+            </Text>
           </Animated.View>
 
           {/* Form Card */}
@@ -578,63 +661,81 @@ const OnboardingScreen = () => {
               styles.card,
               {
                 opacity: formAnim,
-                transform: [{
-                  translateY: formAnim.interpolate({
-                    inputRange: [0,1],
-                    outputRange: [40, 0],
-                  }),
-                }],
+                transform: [
+                  {
+                    translateY: formAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [40, 0],
+                    }),
+                  },
+                ],
               },
-            ]}>
-
+            ]}
+          >
             <View style={styles.sectionHeader}>
               <View style={styles.sectionDot} />
               <Text style={styles.sectionTitle}>Personal Information</Text>
             </View>
 
             <FloatingInput
-              label="Full Name" icon="👤" value={form.fullName}
+              label="Full Name"
+              icon="👤"
+              value={form.fullName}
               onChangeText={v => {
-                setForm(p => ({...p, fullName: v}));
-                if (v.trim()) setErrors(p => ({...p, fullName: null}));
+                setForm(p => ({ ...p, fullName: v }));
+                if (v.trim()) setErrors(p => ({ ...p, fullName: null }));
               }}
-              error={errors.fullName} returnKeyType="next"
+              error={errors.fullName}
+              returnKeyType="next"
             />
             <FloatingInput
-              label="Email Address" icon="✉️" value={form.email}
+              label="Email Address"
+              icon="✉️"
+              value={form.email}
               onChangeText={v => {
-                setForm(p => ({...p, email: v}));
-                if (v.trim()) setErrors(p => ({...p, email: null}));
+                setForm(p => ({ ...p, email: v }));
+                if (v.trim()) setErrors(p => ({ ...p, email: null }));
               }}
-              error={errors.email} keyboardType="email-address"
-              autoCapitalize="none" returnKeyType="next"
+              error={errors.email}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              returnKeyType="next"
             />
             <FloatingInput
-              label="Phone Number" icon="📱" value={form.phone}
+              label="Phone Number"
+              icon="📱"
+              value={form.phone}
               onChangeText={v => {
-                setForm(p => ({...p, phone: v}));
-                if (v.trim()) setErrors(p => ({...p, phone: null}));
+                setForm(p => ({ ...p, phone: v }));
+                if (v.trim()) setErrors(p => ({ ...p, phone: null }));
               }}
-              error={errors.phone} keyboardType="phone-pad"
-              maxLength={10} returnKeyType="next"
+              error={errors.phone}
+              keyboardType="phone-pad"
+              maxLength={10}
+              returnKeyType="next"
             />
             <FloatingInput
-              label="Full Address" icon="📍" value={form.address}
+              label="Full Address"
+              icon="📍"
+              value={form.address}
               onChangeText={v => {
-                setForm(p => ({...p, address: v}));
-                if (v.trim()) setErrors(p => ({...p, address: null}));
+                setForm(p => ({ ...p, address: v }));
+                if (v.trim()) setErrors(p => ({ ...p, address: null }));
               }}
-              error={errors.address} multiline numberOfLines={2}
+              error={errors.address}
+              multiline
+              numberOfLines={2}
               returnKeyType="done"
             />
 
-            <View style={[styles.sectionHeader, {marginTop: hp(2.5)}]}>
+            <View style={[styles.sectionHeader, { marginTop: hp(2.5) }]}>
               <View style={styles.sectionDot} />
               <Text style={styles.sectionTitle}>Documents & Photo</Text>
             </View>
 
             <UploadCard
-              label="Profile Photo" icon="🤳"
+              label="Profile Photo"
+              icon="🤳"
               image={images.profile}
               onPress={() => openPicker('profile')}
               onRemove={() => removeImage('profile')}
@@ -644,7 +745,8 @@ const OnboardingScreen = () => {
 
             <View style={styles.uploadRow}>
               <UploadCard
-                label="Aadhaar Card" icon="🪪"
+                label="Aadhaar Card"
+                icon="🪪"
                 image={images.aadhaar}
                 onPress={() => openPicker('aadhaar')}
                 onRemove={() => removeImage('aadhaar')}
@@ -652,7 +754,8 @@ const OnboardingScreen = () => {
                 style={styles.uploadHalf}
               />
               <UploadCard
-                label="PAN Card" icon="📋"
+                label="PAN Card"
+                icon="📋"
                 image={images.pan}
                 onPress={() => openPicker('pan')}
                 onRemove={() => removeImage('pan')}
@@ -661,32 +764,39 @@ const OnboardingScreen = () => {
               />
             </View>
 
-            <Animated.View style={{transform:[{scale: buttonAnim}], marginTop: hp(3)}}>
+            <Animated.View
+              style={{ transform: [{ scale: buttonAnim }], marginTop: hp(3) }}
+            >
               <TouchableOpacity
-                style={[styles.applyButton, loading && styles.applyButtonDisabled]}
+                style={[
+                  styles.applyButton,
+                  loading && styles.applyButtonDisabled,
+                ]}
                 onPress={handleApply}
                 activeOpacity={0.88}
-                disabled={loading}>
+                disabled={loading}
+              >
                 <View style={styles.applyButtonInner}>
-                  {loading
-                    ? <ActivityIndicator color={COLORS.white} size="small" />
-                    : <>
-                        <Text style={styles.applyButtonText}>APPLY NOW</Text>
-                        <Text style={styles.applyButtonArrow}>→</Text>
-                      </>
-                  }
+                  {loading ? (
+                    <ActivityIndicator color={COLORS.white} size="small" />
+                  ) : (
+                    <>
+                      <Text style={styles.applyButtonText}>APPLY NOW</Text>
+                      <Text style={styles.applyButtonArrow}>→</Text>
+                    </>
+                  )}
                 </View>
                 <View style={styles.applyButtonShine} />
               </TouchableOpacity>
             </Animated.View>
 
             <Text style={styles.disclaimer}>
-              By applying, you agree to our Terms & Privacy Policy. Your documents
-              are encrypted and stored securely.
+              By applying, you agree to our Terms & Privacy Policy. Your
+              documents are encrypted and stored securely.
             </Text>
           </Animated.View>
 
-          <View style={{height: hp(4)}} />
+          <View style={{ height: hp(4) }} />
         </ScrollView>
       </KeyboardAvoidingView>
 

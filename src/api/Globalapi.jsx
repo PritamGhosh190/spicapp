@@ -9,7 +9,7 @@ import axios from 'axios';
 
 
 //Local host URL
- const url = "http://192.168.0.104:8000/auth/";
+ const url = "http://192.168.0.104:8000/";
 
 
 //production URL
@@ -22,20 +22,20 @@ import axios from 'axios';
 export function userloginmobile(data) {
       console.log("your_datasssss==>",data)
     axios.defaults.headers.post["Content-Type"] = "application/json";
-    return axios.post(url + "agent/login", data);
+    return axios.post(url + "auth/agent/login", data);
 }
 
 
-// export const newUserLicenceUpload = async (data) => {
-//     // const token = await AsyncStorage.getItem("token");
-//     // const toc = "Bearer " + token;
+export const agentApply = async (data) => {
+    // const token = await AsyncStorage.getItem("token");
+    // const toc = "Bearer " + token;
   
-//     // axios.defaults.headers.common["Authorization"] = toc;
+    // axios.defaults.headers.common["Authorization"] = toc;
   
-//     // Remove the JSON content-type for FormData
-//     return axios.post(url + "mobile/adddrivinglicence", data, {
-//       headers: {
-//         'Content-Type': 'multipart/form-data',
-//       },
-//     });
-//   };
+    // Remove the JSON content-type for FormData
+    return axios.post(url + "agent/apply", data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  };
