@@ -16,6 +16,7 @@ import { useToast } from '../../constants/GlobalTost';
 import styles, { COLORS } from './LoginStyles';
 import { userloginmobile } from '../../api/Globalapi';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ─── VALIDATION ───────────────────────────────────────────────────────────────
 // Agent ID format: 2 uppercase letters + 4 digits + hyphen + 3 digits  e.g. BS2026-001
@@ -74,8 +75,8 @@ const LoginScreen = () => {
   const { showToast } = useToast();
   const navigation = useNavigation();
 
-  const [agentId, setAgentId] = useState('');
-  const [password, setPassword] = useState('');
+  const [agentId, setAgentId] = useState('BS2026-001');
+  const [password, setPassword] = useState('Test@1234');
   const [showPassword, setShowPassword] = useState(false);
   const [agentIdFocused, setAgentIdFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
@@ -219,11 +220,13 @@ const LoginScreen = () => {
     console.log('Login response:😎😎😎😎😎😎', response); // Debug log
 
     if (response.status === 200) {
+      await AsyncStorage.setItem('token', response.data.token);
       showToast({
         type: 'success',
         title: 'Login Successful',
         message: `Welcome back, Agent ${agentId.trim()}!`,
       });
+      navigation.navigate('BottomNav');
     }
   } catch (error) {
     showToast({
